@@ -1,0 +1,36 @@
+# Core video editing dependencies
+opencv-python>=4.8.0
+
+# Image processing
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# map libraries
+folium==0.20.0
+
+# Utility libraries
+requests==2.31.0
+python-dotenv>=1.0.0
+termcolor>=2.3.0
+beautifulsoup4==4.12.2
+google-generativeai==0.3.2
+pydantic==2.5.2
+lxml==4.9.3
+html5lib==1.1
+
+# Data processing
+pandas>=2.0.0
+gpxpy>=1.5.0
+
+# Plotting
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.18.0
+bokeh>=3.2.0
+
+# Optional: advanced archive handling
+py7zr>=0.20.0
+
+# Firestore integration
+google-cloud-firestore>=2.13.0
+google-cloud-core>=2.3.3
