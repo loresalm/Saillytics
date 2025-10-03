@@ -3,3 +3,5 @@
 outputs/*
 regattas data/*
 serviceAccountKey.json
+wind_data.json
+wind_map.html
