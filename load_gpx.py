@@ -1,12 +1,5 @@
 
-import gpxpy
-import folium
-from datetime import datetime, time
-import pytz
-from geopy.distance import geodesic
-import numpy as np
-import matplotlib.pyplot as plt
-
+from datetime import time
 import utils_gpx as utgpx
 
 gpx_path = "regattas data/2025-06-11T14-45-11.582Z_Watersports_sailing.gpx"

@@ -1,6 +1,5 @@
 import gpxpy
 import folium
-from datetime import datetime, time
 import pytz
 from geopy.distance import geodesic
 import numpy as np
