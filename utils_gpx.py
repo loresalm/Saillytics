@@ -111,7 +111,7 @@ def normalize(values):
     return [(v - vmin) / (vmax - vmin) for v in values]
 
 
-def gpx_pipeline(gpx_path, start_time, end_time, smoothing_win=7, acc_trsh=2, downsample_s=8):
+def gpx_pipeline(gpx_path, start_time, end_time, smoothing_win=7, acc_trsh=2, downsample_s=8, normalize_speed=True):
 
     points_with_time = get_gpx_points(gpx_path, start_time, end_time)
     points_with_time = downsample_gpx(points_with_time, downsample_s)
@@ -119,7 +119,8 @@ def gpx_pipeline(gpx_path, start_time, end_time, smoothing_win=7, acc_trsh=2, do
     accelerations = get_accelerations(points_with_time)
     speeds_clean = clean_speeds(points_with_time, speeds, threshold_k=acc_trsh)
     speeds_clean = smooth_signal(speeds_clean, window_size=smoothing_win)
-    speeds_clean = normalize(speeds_clean)
+    if normalize_speed:
+        speeds_clean = normalize(speeds_clean)
 
     return points_with_time, speeds, speeds_clean, accelerations
 

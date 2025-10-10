@@ -28,7 +28,28 @@ def get_wind(wind_path, date, target_time):
     else:
         print(f"No wind record found for time {target_time}")
         return None, None, None
-    
+
+
+def get_wind_range(wind_path, date, start_time, end_time):
+    with open(wind_path) as f:
+        data = json.load(f)
+
+    records = data.get(date, {}).get("records", [])
+    results = []
+
+    for r in records:
+        t = datetime.strptime(r["Time"], "%H:%M").time()
+        if start_time <= t <= end_time:
+            deg_str = r["Wind Direction"].split("°")[0]
+            results.append({
+                "date": date,
+                "time": r["Time"],
+                "speed": r["Wind Speed (kts)"],
+                "dir_str": deg_str,
+                "deg": float(deg_str)
+            })
+    return results
+
 
 def load_wind_records(wind_path, date):
     with open(wind_path) as f:
