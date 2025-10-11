@@ -1,15 +1,17 @@
 import json
-import folium
+import folium  # type: ignore
 import math
-import json
-from datetime import datetime, timedelta
-import numpy as np
+from datetime import datetime
+import matplotlib.cm as cm  # type: ignore
+import matplotlib.colors as mcolors  # type: ignore
+
 
 # Convert wind direction in degrees to endpoint coordinates
-def endpoint(lat, lon, bearing, speed, scale=0.01):
+def winddir2coord(lat, lon, bearing, speed, scale=0.01):
     # simple approximation, scale adjusts arrow length
     rad = math.radians(bearing)
-    return lat + scale * speed * math.sin(rad), lon + scale * speed * math.cos(rad)
+    return (lat + scale * speed * math.sin(rad),
+            lon + scale * speed * math.cos(rad))
 
 
 def get_wind(wind_path, date, target_time):
@@ -23,7 +25,6 @@ def get_wind(wind_path, date, target_time):
         speed = record["Wind Speed (kts)"]
         dir_str = record["Wind Direction"].split("°")[0]
         deg = float(dir_str)
-        
         return speed, dir_str, deg
     else:
         print(f"No wind record found for time {target_time}")
@@ -104,13 +105,14 @@ def assign_wind_to_track(points_with_time, wind_path, date):
 
     annotated = []
     for lat, lon, t in points_with_time:
-        speed, deg = interpolate_wind(times, speeds, dirs_deg, t.replace(tzinfo=None))
+        speed, deg = interpolate_wind(times, speeds,
+                                      dirs_deg, t.replace(tzinfo=None))
         annotated.append((lat, lon, t, speed, deg))
     return annotated
 
 
 def plot_wind(m, lat, lon, speed, deg):
-    end_lat, end_lon = endpoint(lat, lon, deg, speed)
+    end_lat, end_lon = winddir2coord(lat, lon, deg, speed)
 
     folium.PolyLine([(lat, lon), (end_lat, end_lon)],
                     color="blue",
@@ -119,13 +121,9 @@ def plot_wind(m, lat, lon, speed, deg):
     return m
 
 
-import folium
-import matplotlib.cm as cm
-import matplotlib.colors as mcolors
-import math
-
 def endpoint(lat, lon, deg, dist_nm):
-    """Compute endpoint given start, bearing (deg), and distance in nautical miles."""
+    """Compute endpoint given start, bearing (deg),
+    and distance in nautical miles."""
     R = 3440.065  # Earth radius in nautical miles
     d = dist_nm / R
     lat1, lon1 = math.radians(lat), math.radians(lon)
@@ -152,7 +150,7 @@ def normalize(values):
 def plot_map_with_wind(annotated_points, speeds, output_path="track_map.html"):
     """
     Plot GPX track with speed-colored line and wind arrows.
-    
+
     annotated_points: [(lat, lon, datetime, wind_speed, wind_deg), ...]
     speeds: list of normalized sailing speeds [0,1]
     """
@@ -169,16 +167,18 @@ def plot_map_with_wind(annotated_points, speeds, output_path="track_map.html"):
         segment = [annotated_points[i-1][:2], annotated_points[i][:2]]
         color = mcolors.to_hex(cmap_speed(speeds[i-1]))
         folium.PolyLine(segment, color=color, weight=5).add_to(m)
-        folium.PolyLine(segment, color="black", weight=1, opacity=0.8, dash_array="5,5").add_to(m)
+        folium.PolyLine(segment, color="black", weight=1,
+                        opacity=0.8, dash_array="5,5").add_to(m)
 
     # --- Points and Wind Arrows ---
     for (lat, lon, _, w_speed, w_deg), wn in zip(annotated_points, wind_norm):
-       
+
         # Dot
         folium.CircleMarker(location=(lat, lon), radius=2,
-                            color=None, fill=True, fill_color="black").add_to(m)
+                            color=None, fill=True,
+                            fill_color="black").add_to(m)
         if w_speed is not None and w_deg is not None:
-            
+
             # Scaled arrow (length ~ wind speed)
             end_lat, end_lon = endpoint(lat, lon, w_deg, wn * 0.05)
             folium.PolyLine([(lat, lon), (end_lat, end_lon)],
@@ -187,6 +187,7 @@ def plot_map_with_wind(annotated_points, speeds, output_path="track_map.html"):
             # Standardized arrow (length = constant)
             end_lat2, end_lon2 = endpoint(lat, lon, w_deg, 0.05)
             folium.PolyLine([(lat, lon), (end_lat2, end_lon2)],
-                            color="black", weight=1, opacity=0.8, dash_array="5,5").add_to(m)
+                            color="black", weight=1,
+                            opacity=0.8, dash_array="5,5").add_to(m)
 
     m.save(output_path)

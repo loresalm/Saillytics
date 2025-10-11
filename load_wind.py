@@ -1,9 +1,10 @@
 import json
-import firebase_admin
-from firebase_admin import credentials, firestore
+import firebase_admin  # type: ignore
+from firebase_admin import credentials, firestore  # type: ignore
+from google.cloud.firestore_v1._helpers import Timestamp   # type: ignore
 
 # Initialize Firebase
-cred = credentials.Certificate("serviceAccountKey.json")  # replace with your key
+cred = credentials.Certificate("inputs/firebase/serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
 
 # Firestore client
@@ -41,7 +42,7 @@ for doc in docs:
     data[doc.id] = convert(doc.to_dict())
 
 # Save as JSON
-with open("wind_data.json", "w") as f:
+with open("inputs/wind/wind_data.json", "w") as f:
     json.dump(data, f, indent=2)
 
-print("Data saved to wind_data.json")
+print("Data saved to inputs/wind/wind_data.json")

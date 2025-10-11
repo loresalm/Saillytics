@@ -1,11 +1,11 @@
-import gpxpy
-import folium
-import pytz
-from geopy.distance import geodesic
-import numpy as np
-import matplotlib.cm as cm
-import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
+import gpxpy  # type: ignore
+import folium  # type: ignore
+import pytz  # type: ignore
+from geopy.distance import geodesic  # type: ignore
+import numpy as np  # type: ignore
+import matplotlib.cm as cm  # type: ignore
+import matplotlib.colors as mcolors  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
 
 
 def get_gpx_points(gpx_path, start_time, end_time):
@@ -62,7 +62,7 @@ def get_velocity(points_with_time):
 
 def get_accelerations(points_with_time):
     # Convert GPX times safely to plain Python datetimes
-    times = [p[2].replace(tzinfo=None) for p in points_with_time[1:]] 
+    times = [p[2].replace(tzinfo=None) for p in points_with_time[1:]]
     speeds = get_velocity(points_with_time)
     accelerations = []
     for i in range(1, len(speeds)):
@@ -74,7 +74,8 @@ def get_accelerations(points_with_time):
 
 def clean_speeds(points_with_time, speeds, threshold_k=3):
     """
-    Small threshold_k (e.g., 2) → more aggressive cleaning (will smooth out more data, might remove valid sharp turns or gusts).
+    Small threshold_k (e.g., 2) → more aggressive cleaning
+    (will smooth out more data, might remove valid sharp turns or gusts).
 
     Large threshold_k (e.g., 5) → more tolerant, only removes extreme spikes.
     """
@@ -111,24 +112,26 @@ def normalize(values):
     return [(v - vmin) / (vmax - vmin) for v in values]
 
 
-def gpx_pipeline(gpx_path, start_time, end_time, smoothing_win=7, acc_trsh=2, downsample_s=8, normalize_speed=True):
+def gpx_pipeline(gpx_path, start_t, end_t, smooth_win=7,
+                 acc_trsh=2, downsamp_s=8):
 
-    points_with_time = get_gpx_points(gpx_path, start_time, end_time)
-    points_with_time = downsample_gpx(points_with_time, downsample_s)
+    points_with_time = get_gpx_points(gpx_path, start_t, end_t)
+    points_with_time = downsample_gpx(points_with_time, downsamp_s)
     speeds = get_velocity(points_with_time)
     accelerations = get_accelerations(points_with_time)
     speeds_clean = clean_speeds(points_with_time, speeds, threshold_k=acc_trsh)
-    speeds_clean = smooth_signal(speeds_clean, window_size=smoothing_win)
-    if normalize_speed:
-        speeds_clean = normalize(speeds_clean)
+    speeds_clean = smooth_signal(speeds_clean, window_size=smooth_win)
 
-    return points_with_time, speeds, speeds_clean, accelerations
+    speeds_clean_norm = normalize(speeds_clean)
+
+    return (points_with_time, speeds, speeds_clean,
+            speeds_clean_norm, accelerations)
 
 
 def plot_map(points_with_time, speeds, output_path="track_map.html"):
     """
     Plot GPX track with speed-based coloring and dots at every point.
-    
+
     points_with_time: list of tuples [(lat, lon, datetime), ...]
     speeds: list of normalized speeds [0,1] corresponding to points_with_time
     output_path: path to save the HTML map
@@ -161,35 +164,39 @@ def plot_map(points_with_time, speeds, output_path="track_map.html"):
     m.save(output_path)
 
 
-def plot_speed_acceleration(points_with_time, accelerations, speeds_raw, speeds_clean, output_path_plot):
+def plot_speed_acceleration(points_with_time, accelerations, speeds_raw,
+                            speeds_clean, output_path_plot):
 
     # Extract times
     times = [p[2].replace(tzinfo=None) for p in points_with_time[1:]]
 
     # Create figure with 3 subplots sharing x-axis
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(20, 10), sharex=True)
-    
+
     # Raw speed
-    ax1.plot(times, speeds_raw, "-o", color="blue", markersize=3, label="Raw Speed (knots)")
+    ax1.plot(times, speeds_raw, "-o", color="blue",
+             markersize=3, label="Raw Speed (knots)")
     ax1.set_ylabel("Speed (knots)")
     ax1.legend()
     ax1.grid(True, linestyle="--", alpha=0.5)
-    
+
     # Acceleration
-    ax2.plot(times[1:], accelerations, "-o", color="red", markersize=3, label="Acceleration (m/s²)")
+    ax2.plot(times[1:], accelerations, "-o", color="red",
+             markersize=3, label="Acceleration (m/s²)")
     ax2.set_ylabel("Acceleration (m/s²)")
     ax2.legend()
     ax2.grid(True, linestyle="--", alpha=0.5)
-    
+
     # Cleaned speed
-    ax3.plot(times, speeds_clean, "-o", color="green", markersize=3, label="Cleaned Speed (knots)")
+    ax3.plot(times, speeds_clean, "-o", color="green",
+             markersize=3, label="Cleaned Speed (knots)")
     ax3.set_ylabel("Cleaned Speed (knots)")
     ax3.legend()
     ax3.grid(True, linestyle="--", alpha=0.5)
-    
+
     # Common X-axis label
     ax3.set_xlabel("Time")
-    
+
     plt.suptitle("Speed, Acceleration, and Cleaned Speed over Time")
     plt.tight_layout()
     plt.subplots_adjust(top=0.92)  # make room for suptitle

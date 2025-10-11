@@ -1,7 +1,7 @@
 .DS_Store
 
 outputs/*
-regattas data/*
+inputs/*
 serviceAccountKey.json
 wind_data.json
 wind_map.html
